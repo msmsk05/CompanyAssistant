@@ -1,10 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Contoso Knowledge Copilot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contoso Knowledge Copilot</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, Arial, sans-serif;
+    background:#f5f7fa;
+}
+
+.header{
+    background:#0078D4;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    padding:40px;
+}
+
+.card{
+    background:white;
+    border-radius:10px;
+    padding:25px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+
+.btn{
+    display:inline-block;
+    background:#0078D4;
+    color:white;
+    padding:12px 20px;
+    text-decoration:none;
+    border-radius:5px;
+    margin-top:10px;
+}
+</style>
 </head>
+
 <body>
-    <h1>Contoso Knowledge Copilot</h1>
-    <p>Azure OpenAI + AI Search Demo</p>
+
+<div class="header">
+<h1>Contoso Knowledge Copilot</h1>
+<p>Azure OpenAI + Azure AI Search + Azure AI Foundry</p>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h2>HR Assistant</h2>
+<p>Ask questions about employee policies, benefits, travel and onboarding.</p>
+</div>
+
+<div class="card">
+<h2>IT Support Assistant</h2>
+<p>Get help with VPN, MFA, laptop requests and company procedures.</p>
+</div>
+
+<div class="card">
+<h2>Document Summarization</h2>
+<p>Create executive summaries from uploaded company documentation.</p>
+</div>
+
+<div class="card">
+<h2>Knowledge Search</h2>
+<p>Find answers across all indexed company documents.</p>
+</div>
+
+</div>
+
 </body>
 </html>
