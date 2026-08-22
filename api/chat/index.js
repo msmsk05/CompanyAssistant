@@ -18,18 +18,18 @@ module.exports = async function (context, req) {
                 "api-key": apiKey
             },
             body: JSON.stringify({
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are Contoso Knowledge Copilot."
-                    },
-                    {
-                        role: "user",
-                        content: question
-                    }
-                ],
-                max_completion_tokens: 500
-            })
+    messages: [
+        {
+            role: "system",
+            content: "You are Contoso Knowledge Copilot."
+        },
+        {
+            role: "user",
+            content: question
+        }
+    ],
+    max_completion_tokens: 500
+})
         });
 
         const result = await response.json();
