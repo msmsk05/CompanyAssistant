@@ -9,34 +9,49 @@ module.exports = async function (context, req) {
     const url =
         `${endpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`;
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "api-key": apiKey
-        },
-        body: JSON.stringify({
-            messages: [
-                {
-                    role: "system",
-                    content: "You are Contoso Knowledge Copilot."
-                },
-                {
-                    role: "user",
-                    content: question
-                }
-            ],
-            max_tokens: 500
-        })
-    });
+    try {
 
-    const result = await response.json();
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "api-key": apiKey
+            },
+            body: JSON.stringify({
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are Contoso Knowledge Copilot."
+                    },
+                    {
+                        role: "user",
+                        content: question
+                    }
+                ],
+                max_tokens: 500
+            })
+        });
 
-    return {
-        status: 200,
-        body: {
-            answer: result.choices?.[0]?.message?.content ||
-                    "No response received."
-        }
-    };
+        const result = await response.json();
+
+        return {
+            status: 200,
+            body: {
+                endpoint: endpoint,
+                deployment: deployment,
+                statusCode: response.status,
+                response: result
+            }
+        };
+
+    } catch (error) {
+
+        return {
+            status: 500,
+            body: {
+                error: error.message
+            }
+        };
+
+    }
 };
