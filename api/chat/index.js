@@ -18,29 +18,30 @@ module.exports = async function (context, req) {
                 "api-key": apiKey
             },
             body: JSON.stringify({
-    messages: [
-        {
-            role: "system",
-            content: "You are Contoso Knowledge Copilot."
-        },
-        {
-            role: "user",
-            content: question
-        }
-    ],
-    max_completion_tokens: 500
-})
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are Contoso Knowledge Copilot. Answer clearly and concisely."
+                    },
+                    {
+                        role: "user",
+                        content: question
+                    }
+                ],
+                max_completion_tokens: 2000
+            })
         });
 
         const result = await response.json();
 
+        const answer =
+            result.choices?.[0]?.message?.content ||
+            "No response received.";
+
         return {
             status: 200,
             body: {
-                endpoint: endpoint,
-                deployment: deployment,
-                statusCode: response.status,
-                response: result
+                answer
             }
         };
 
@@ -49,7 +50,7 @@ module.exports = async function (context, req) {
         return {
             status: 500,
             body: {
-                error: error.message
+                answer: `Error: ${error.message}`
             }
         };
 
