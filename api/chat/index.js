@@ -28,7 +28,7 @@ module.exports = async function (context, req) {
                         content: question
                     }
                 ],
-                max_tokens: 500
+                max_completion_tokens: 500
             })
         });
 
