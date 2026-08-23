@@ -33,6 +33,7 @@ module.exports = async function (context, req) {
         const sources = searchResults.value || [];
 
         const contextText = sources
+            .slice(0,1)
             .map(doc => doc.chunk)
             .join("\n\n");
 
