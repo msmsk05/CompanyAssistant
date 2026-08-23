@@ -4,17 +4,14 @@ module.exports = async function (context, req) {
 
         const question = req.body?.message || "";
 
-        // Azure AI Search
         const searchEndpoint = process.env.AZURE_SEARCH_ENDPOINT;
         const searchKey = process.env.AZURE_SEARCH_KEY;
         const searchIndex = process.env.AZURE_SEARCH_INDEX;
 
-        // Azure OpenAI
         const openAiEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
         const openAiKey = process.env.AZURE_OPENAI_API_KEY;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
-        // Search documents
         const searchResponse = await fetch(
             `${searchEndpoint}/indexes/${searchIndex}/docs/search?api-version=2024-07-01`,
             {
@@ -42,14 +39,11 @@ module.exports = async function (context, req) {
         const prompt = `
 Answer ONLY using the supplied company documents.
 
-If the information is not present, say:
-"I couldn't find that information in the company documents."
-
 Company Documents:
 
 ${contextText}
 
-User Question:
+Question:
 ${question}
 `;
 
@@ -65,8 +59,7 @@ ${question}
                     messages: [
                         {
                             role: "system",
-                            content:
-                                "You are Contoso Knowledge Copilot."
+                            content: "You are Contoso Knowledge Copilot."
                         },
                         {
                             role: "user",
@@ -80,10 +73,6 @@ ${question}
 
         const openAiResult = await openAiResponse.json();
 
-        const answer =
-            openAiResult.choices?.[0]?.message?.content ||
-            "No response received.";
-
         const citationList = [
             ...new Set(
                 sources
@@ -95,7 +84,7 @@ ${question}
         return {
             status: 200,
             body: {
-                answer,
+                openAiResult,
                 sources: citationList
             }
         };
@@ -105,8 +94,7 @@ ${question}
         return {
             status: 500,
             body: {
-                answer: `Error: ${error.message}`,
-                sources: []
+                error: error.message
             }
         };
 
