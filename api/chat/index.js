@@ -1,3 +1,4 @@
+
 module.exports = async function (context, req) {
 
     try {
@@ -14,7 +15,7 @@ module.exports = async function (context, req) {
         const openAiKey = process.env.AZURE_OPENAI_API_KEY;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
-        // Search documents
+        // SEARCH
         const searchResponse = await fetch(
             `${searchEndpoint}/indexes/${searchIndex}/docs/search?api-version=2024-07-01`,
             {
@@ -25,7 +26,7 @@ module.exports = async function (context, req) {
                 },
                 body: JSON.stringify({
                     search: question,
-                    top: 3
+                    top: 5
                 })
             }
         );
@@ -36,23 +37,32 @@ module.exports = async function (context, req) {
 
         const contextText = sources
             .map(doc =>
-                `SOURCE: ${doc.title}\n${doc.chunk}`)
-            .join("\n\n");
+                `DOCUMENT: ${doc.title}\n\n${doc.chunk}`)
+            .join("\n\n--------------------------------\n\n");
 
         const prompt = `
-Answer ONLY using the supplied company documents.
+You are Contoso Knowledge Copilot.
 
-If the information is not present, say:
-"I couldn't find that information in the company documents."
+Use ONLY the document excerpts provided below.
 
-Company Documents:
+Rules:
+1. Answer using the document excerpts.
+2. Summarize and explain clearly.
+3. If partial information exists, provide the best answer possible.
+4. Only say "I couldn't find that information in the company documents." if the answer truly does not appear in the excerpts.
+5. Do not invent policies or procedures.
+
+DOCUMENT EXCERPTS:
 
 ${contextText}
 
-User Question:
+QUESTION:
 ${question}
+
+ANSWER:
 `;
 
+        // OPENAI
         const openAiResponse = await fetch(
             `${openAiEndpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`,
             {
@@ -65,15 +75,14 @@ ${question}
                     messages: [
                         {
                             role: "system",
-                            content:
-                                "You are Contoso Knowledge Copilot. Always answer based on the provided company documents."
+                            content: "You are a helpful document assistant."
                         },
                         {
                             role: "user",
                             content: prompt
                         }
                     ],
-                    max_completion_tokens: 2000
+                    max_completion_tokens: 1000
                 })
             }
         );
@@ -84,7 +93,6 @@ ${question}
             openAiResult.choices?.[0]?.message?.content ||
             "No response received.";
 
-        // Unique document names
         const citationList = [
             ...new Set(
                 sources
