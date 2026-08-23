@@ -1,3 +1,4 @@
+
 module.exports = async function (context, req) {
 
     try {
@@ -12,7 +13,7 @@ module.exports = async function (context, req) {
         const openAiKey = process.env.AZURE_OPENAI_API_KEY;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
-        // SEARCH DOCUMENTS
+        // SEARCH
         const searchResponse = await fetch(
             `${searchEndpoint}/indexes/${searchIndex}/docs/search?api-version=2024-07-01`,
             {
@@ -33,11 +34,11 @@ module.exports = async function (context, req) {
         const sources = searchResults.value || [];
 
         const contextText = sources
-            .slice(0,1)
-            .map(doc => doc.chunk)
+            .map(doc =>
+                `${doc.title}\n${doc.chunk}`)
             .join("\n\n");
 
-        // GPT CALL
+        // GPT
         const openAiResponse = await fetch(
             `${openAiEndpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`,
             {
@@ -50,51 +51,17 @@ module.exports = async function (context, req) {
                     messages: [
                         {
                             role: "system",
-                            content:
-                                "You answer questions using the supplied company documents. If the answer cannot be found, say that clearly."
+                            content: `You are Contoso Knowledge Copilot.
+
+Answer the user's question using ONLY the retrieved company documents.
+
+If the answer is not present in the documents, say:
+"I couldn't find that information in the company documents."
+
+Be concise and professional.`
                         },
                         {
-                            role: "user",
-                            content:
-                                `Question:\n${question}\n\nDocuments:\n${contextText}`
-                        }
-                    ],
-                    max_completion_tokens: 1000
-                })
-            }
-        );
-
-        const openAiResult = await openAiResponse.json();
-
-        const answer =
-            openAiResult.choices?.[0]?.message?.content ||
-            "No response received.";
-
-        const citationList = [
-            ...new Set(
-                sources
-                    .map(source => source.title)
-                    .filter(Boolean)
-            )
-        ];
-
-        return {
-            status: 200,
-            body: {
-                answer,
-                sources: citationList
-            }
-        };
-
-    } catch (error) {
-
-        return {
-            status: 500,
-            body: {
-                answer: error.message,
-                sources: []
-            }
-        };
-
-    }
-};
+                            role: "assistant",
+                            content: `Retrieved documents:\n\n${contextText}`
+                        },
+             
