@@ -164,47 +164,61 @@
 
         async function askCopilot() {
 
-            const question =
-                document.getElementById("question").value;
+    const question =
+        document.getElementById("question").value;
 
-            if (!question) {
-                alert("Please enter a question.");
-                return;
-            }
+    if (!question) {
+        alert("Please enter a question.");
+        return;
+    }
 
-            document.getElementById("answer").innerText =
-                "Thinking...";
+    document.getElementById("answer").innerText =
+        "Thinking...";
 
-            try {
+    document.getElementById("sources").innerText =
+        "";
 
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: question
-                    })
-                });
+    try {
 
-                const data = await response.json();
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: question
+            })
+        });
 
-                if (data.answer) {
-                    document.getElementById("answer").innerText =
-                        data.answer;
-                }
-                else {
-                    document.getElementById("answer").innerText =
-                        JSON.stringify(data, null, 2);
-                }
+        const data = await response.json();
 
-            } catch (error) {
+        document.getElementById("answer").innerText =
+            data.answer || "No answer received.";
 
-                document.getElementById("answer").innerText =
-                    "Error: " + error.message;
+        if (data.sources && data.sources.length > 0) {
 
-            }
+            document.getElementById("sources").innerHTML =
+                data.sources
+                    .map(source => `• ${source}`)
+                    .join("<br>");
+
+        } else {
+
+            document.getElementById("sources").innerText =
+                "No sources found.";
+
         }
+
+    } catch (error) {
+
+        document.getElementById("answer").innerText =
+            error.message;
+
+        document.getElementById("sources").innerText =
+            "";
+
+    }
+}
 
     </script>
 
