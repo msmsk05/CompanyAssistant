@@ -1,58 +1,30 @@
 module.exports = async function (context, req) {
 
-    const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-    const apiKey = process.env.AZURE_OPENAI_API_KEY;
-    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
+    const endpoint = process.env.AZURE_SEARCH_ENDPOINT;
+    const key = process.env.AZURE_SEARCH_KEY;
+    const index = process.env.AZURE_SEARCH_INDEX;
 
-    const question = req.body?.message || "Hello";
+    const question = req.body?.message || "remote work";
 
     const url =
-        `${endpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`;
+        `${endpoint}/indexes/${index}/docs/search?api-version=2024-07-01`;
 
-    try {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "api-key": key
+        },
+        body: JSON.stringify({
+            search: question,
+            top: 5
+        })
+    });
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "api-key": apiKey
-            },
-            body: JSON.stringify({
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are Contoso Knowledge Copilot. Answer clearly and concisely."
-                    },
-                    {
-                        role: "user",
-                        content: question
-                    }
-                ],
-                max_completion_tokens: 2000
-            })
-        });
+    const results = await response.json();
 
-        const result = await response.json();
-
-        const answer =
-            result.choices?.[0]?.message?.content ||
-            "No response received.";
-
-        return {
-            status: 200,
-            body: {
-                answer
-            }
-        };
-
-    } catch (error) {
-
-        return {
-            status: 500,
-            body: {
-                answer: `Error: ${error.message}`
-            }
-        };
-
-    }
+    return {
+        status: 200,
+        body: results
+    };
 };
