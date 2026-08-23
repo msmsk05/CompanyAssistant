@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -79,6 +78,15 @@
             border: 1px solid #ddd;
         }
 
+        .sources {
+            margin-top: 20px;
+            background: #f8f8f8;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 60px;
+            border: 1px solid #ddd;
+        }
+
         .examples {
             margin-top: 20px;
         }
@@ -124,6 +132,7 @@
             </button>
 
             <div class="examples">
+
                 <button class="example-btn"
                     onclick="setQuestion('How do I request a new laptop?')">
                     Laptop Request
@@ -143,14 +152,20 @@
                     onclick="setQuestion('What documents discuss remote work?')">
                     Remote Work
                 </button>
+
             </div>
 
-           <h3>Answer</h3>
-           <div id="answer" class="answer">
-               Ask a question to begin.
-           </div>
+            <h3>Answer</h3>
 
-          <h3>Sources
+            <div id="answer" class="answer">
+                Ask a question to begin.
+            </div>
+
+            <h3>Sources</h3>
+
+            <div id="sources" class="sources">
+                No sources yet.
+            </div>
 
         </div>
 
@@ -164,61 +179,62 @@
 
         async function askCopilot() {
 
-    const question =
-        document.getElementById("question").value;
+            const question =
+                document.getElementById("question").value;
 
-    if (!question) {
-        alert("Please enter a question.");
-        return;
-    }
+            if (!question) {
+                alert("Please enter a question.");
+                return;
+            }
 
-    document.getElementById("answer").innerText =
-        "Thinking...";
-
-    document.getElementById("sources").innerText =
-        "";
-
-    try {
-
-        const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: question
-            })
-        });
-
-        const data = await response.json();
-
-        document.getElementById("answer").innerText =
-            data.answer || "No answer received.";
-
-        if (data.sources && data.sources.length > 0) {
+            document.getElementById("answer").innerText =
+                "Thinking...";
 
             document.getElementById("sources").innerHTML =
-                data.sources
-                    .map(source => `• ${source}`)
-                    .join("<br>");
+                "";
 
-        } else {
+            try {
 
-            document.getElementById("sources").innerText =
-                "No sources found.";
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: question
+                    })
+                });
 
+                const data = await response.json();
+
+                document.getElementById("answer").innerText =
+                    data.answer || "No answer received.";
+
+                if (data.sources &&
+                    data.sources.length > 0) {
+
+                    document.getElementById("sources").innerHTML =
+                        data.sources
+                            .map(source => `• ${source}`)
+                            .join("<br>");
+
+                } else {
+
+                    document.getElementById("sources").innerText =
+                        "No sources found.";
+
+                }
+
+            } catch (error) {
+
+                document.getElementById("answer").innerText =
+                    "Error: " + error.message;
+
+                document.getElementById("sources").innerText =
+                    "";
+
+            }
         }
-
-    } catch (error) {
-
-        document.getElementById("answer").innerText =
-            error.message;
-
-        document.getElementById("sources").innerText =
-            "";
-
-    }
-}
 
     </script>
 
