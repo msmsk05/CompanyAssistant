@@ -35,10 +35,9 @@ module.exports = async function (context, req) {
 
         const contextText = sources
             .map(doc =>
-                `${doc.title}\n${doc.chunk}`)
+                `Document: ${doc.title}\n${doc.chunk}`)
             .join("\n\n");
 
-        // GPT
         const openAiResponse = await fetch(
             `${openAiEndpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`,
             {
@@ -51,17 +50,63 @@ module.exports = async function (context, req) {
                     messages: [
                         {
                             role: "system",
-                            content: `You are Contoso Knowledge Copilot.
-
-Answer the user's question using ONLY the retrieved company documents.
-
-If the answer is not present in the documents, say:
-"I couldn't find that information in the company documents."
-
-Be concise and professional.`
+                            content:
+                                "You are Contoso Knowledge Copilot. Answer only using the provided company documents. If the answer is not available, say so."
                         },
                         {
-                            role: "assistant",
-                            content: `Retrieved documents:\n\n${contextText}`
-                        },
-             
+                            role: "user",
+                            content:
+`User Question:
+${question}
+
+Company Documents:
+${contextText}
+
+Please answer the user's question using only the company documents above.`
+                        }
+                    ],
+                    max_completion_tokens: 1000
+                })
+            }
+        );
+
+        const openAiResult = await openAiResponse.json();
+
+        const answer =
+            openAiResult.choices?.[0]?.message?.content ||
+            "No response received.";
+
+        const citationList = [
+            ...new Set(
+                sources
+                    .map(source => source.title)
+                    .filter(Boolean)
+            )
+        ];
+
+        return {
+            status: 200,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: {
+                answer,
+                sources: citationList
+            }
+        };
+
+    } catch (error) {
+
+        return {
+            status: 500,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: {
+                answer: `Error: ${error.message}`,
+                sources: []
+            }
+        };
+
+    }
+};
