@@ -1,4 +1,3 @@
-
 module.exports = async function (context, req) {
 
     try {
@@ -15,7 +14,7 @@ module.exports = async function (context, req) {
         const openAiKey = process.env.AZURE_OPENAI_API_KEY;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
-        // SEARCH
+        // Search documents
         const searchResponse = await fetch(
             `${searchEndpoint}/indexes/${searchIndex}/docs/search?api-version=2024-07-01`,
             {
@@ -26,7 +25,7 @@ module.exports = async function (context, req) {
                 },
                 body: JSON.stringify({
                     search: question,
-                    top: 5
+                    top: 3
                 })
             }
         );
@@ -37,32 +36,23 @@ module.exports = async function (context, req) {
 
         const contextText = sources
             .map(doc =>
-                `DOCUMENT: ${doc.title}\n\n${doc.chunk}`)
-            .join("\n\n--------------------------------\n\n");
+                `SOURCE: ${doc.title}\n${doc.chunk}`)
+            .join("\n\n");
 
         const prompt = `
-You are Contoso Knowledge Copilot.
+Answer ONLY using the supplied company documents.
 
-Use ONLY the document excerpts provided below.
+If the information is not present, say:
+"I couldn't find that information in the company documents."
 
-Rules:
-1. Answer using the document excerpts.
-2. Summarize and explain clearly.
-3. If partial information exists, provide the best answer possible.
-4. Only say "I couldn't find that information in the company documents." if the answer truly does not appear in the excerpts.
-5. Do not invent policies or procedures.
-
-DOCUMENT EXCERPTS:
+Company Documents:
 
 ${contextText}
 
-QUESTION:
+User Question:
 ${question}
-
-ANSWER:
 `;
 
-        // OPENAI
         const openAiResponse = await fetch(
             `${openAiEndpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`,
             {
@@ -75,7 +65,8 @@ ANSWER:
                     messages: [
                         {
                             role: "system",
-                            content: "You are a helpful document assistant."
+                            content:
+                                "You are Contoso Knowledge Copilot."
                         },
                         {
                             role: "user",
