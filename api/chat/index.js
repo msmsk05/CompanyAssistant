@@ -1,4 +1,3 @@
-
 module.exports = async function (context, req) {
 
     try {
@@ -67,7 +66,7 @@ ${question}
                         {
                             role: "system",
                             content:
-                                "You are Contoso Knowledge Copilot."
+                                "You are Contoso Knowledge Copilot. Always answer based on the provided company documents."
                         },
                         {
                             role: "user",
@@ -85,10 +84,20 @@ ${question}
             openAiResult.choices?.[0]?.message?.content ||
             "No response received.";
 
+        // Unique document names
+        const citationList = [
+            ...new Set(
+                sources
+                    .map(source => source.title)
+                    .filter(Boolean)
+            )
+        ];
+
         return {
             status: 200,
             body: {
-                answer
+                answer,
+                sources: citationList
             }
         };
 
@@ -97,7 +106,8 @@ ${question}
         return {
             status: 500,
             body: {
-                answer: error.message
+                answer: `Error: ${error.message}`,
+                sources: []
             }
         };
 
