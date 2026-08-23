@@ -12,6 +12,7 @@ module.exports = async function (context, req) {
         const openAiKey = process.env.AZURE_OPENAI_API_KEY;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
+        // SEARCH DOCUMENTS
         const searchResponse = await fetch(
             `${searchEndpoint}/indexes/${searchIndex}/docs/search?api-version=2024-07-01`,
             {
@@ -32,21 +33,10 @@ module.exports = async function (context, req) {
         const sources = searchResults.value || [];
 
         const contextText = sources
-            .map(doc =>
-                `SOURCE: ${doc.title}\n${doc.chunk}`)
+            .map(doc => doc.chunk)
             .join("\n\n");
 
-        const prompt = `
-Answer ONLY using the supplied company documents.
-
-Company Documents:
-
-${contextText}
-
-Question:
-${question}
-`;
-
+        // GPT CALL
         const openAiResponse = await fetch(
             `${openAiEndpoint}openai/deployments/${deployment}/chat/completions?api-version=2024-10-21`,
             {
@@ -59,11 +49,13 @@ ${question}
                     messages: [
                         {
                             role: "system",
-                            content: "You are Contoso Knowledge Copilot."
+                            content:
+                                "You answer questions using the supplied company documents. If the answer cannot be found, say that clearly."
                         },
                         {
                             role: "user",
-                            content: prompt
+                            content:
+                                `Question:\n${question}\n\nDocuments:\n${contextText}`
                         }
                     ],
                     max_completion_tokens: 1000
@@ -72,6 +64,10 @@ ${question}
         );
 
         const openAiResult = await openAiResponse.json();
+
+        const answer =
+            openAiResult.choices?.[0]?.message?.content ||
+            "No response received.";
 
         const citationList = [
             ...new Set(
@@ -84,7 +80,7 @@ ${question}
         return {
             status: 200,
             body: {
-                openAiResult,
+                answer,
                 sources: citationList
             }
         };
@@ -94,7 +90,8 @@ ${question}
         return {
             status: 500,
             body: {
-                error: error.message
+                answer: error.message,
+                sources: []
             }
         };
 
